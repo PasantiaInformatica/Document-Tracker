@@ -1,4 +1,13 @@
-var  tbl_tramite;
+var  tbl_tramite; // Variable global para almacenar la instancia de DataTable
+
+/*
+    Configura y carga la DataTable con los trámites del usuario actual
+    Obtiene el ID y rol del usuario desde campos ocultos en el HTML
+    Configura columnas, paginación, idioma y funcionalidades:
+        - Botones para ver detalles, seguimiento y derivación
+        - Formateo visual del estado del trámite
+        - Control de acceso para derivación basado en el rol del usuario
+*/
 function Listar_Tramite(){
     let idusuario = document.getElementById('txtprincipalid').value;
     let rol = document.getElementById('txtprincipalrol').value;
@@ -66,6 +75,11 @@ function Listar_Tramite(){
     });
 }
 
+/*
+    Inicialización cuando el documento está listo:
+        - Carga inicial de trámites
+        - Configuración del filtro por estado
+*/
 $(document).ready(function() {
     Listar_Tramite();
 
@@ -78,11 +92,16 @@ $(document).ready(function() {
     });
 });
 
+/*
+    Manejador para el botón de derivación:
+        - Abre el modal de derivación
+        - Pre-carga datos del trámite seleccionado
+*/
 $('#tabla_tramite').on('click','.derivar',function(){
     var data = tbl_tramite.row($(this).parents('tr')).data();//En tamaño escritorio
     if(tbl_tramite.row(this).child.isShown()){
         var data = tbl_tramite.row(this).data();
-    }//Permite llevar los datos cuando es tamaño celular y usas el responsive de datatable
+    }
     $("#modal_derivar").modal('show');
     document.getElementById('lbl_titulo_derivar').innerHTML="<b>DERIVAR O FINALIZAR TRAMITE</b>  "+data.documento_id;
     document.getElementById('txt_fecha_de').value=data.doc_fecharegistro;
@@ -92,21 +111,31 @@ $('#tabla_tramite').on('click','.derivar',function(){
     document.getElementById('txt_idareaorigen').value = data.area_destino;
 })
 
+/*
+    Manejador para el botón de seguimiento:
+        - Abre el modal de seguimiento
+        - Carga el historial del trámite seleccionado
+*/
 $('#tabla_tramite').on('click','.seguimiento',function(){
     var data = tbl_tramite.row($(this).parents('tr')).data();//En tamaño escritorio
     if(tbl_tramite.row(this).child.isShown()){
         var data = tbl_tramite.row(this).data();
-    }//Permite llevar los datos cuando es tamaño celular y usas el responsive de datatable
+    }
     $("#modal_seguimiento").modal('show');
     document.getElementById('lbl_titulo').innerHTML="SEGUIMIENTO DEL TRÁMITE "+data.documento_id;
     Listar_Seguimiento_Tramite(data.documento_id);
 })
 
+/*
+    Manejador para el botón de detalles:
+        - Abre el modal de detalles
+        - Muestra información completa del trámite
+*/
 $('#tabla_tramite').on('click','.mas',function(){
     var data = tbl_tramite.row($(this).parents('tr')).data();//En tamaño escritorio
     if(tbl_tramite.row(this).child.isShown()){
         var data = tbl_tramite.row(this).data();
-    }//Permite llevar los datos cuando es tamaño celular y usas el responsive de datatable
+    }
     $("#modal_mas").modal('show');
     document.getElementById('lbl_titulo_datos').innerHTML="DATOS DEL TRÁMITE "+data.documento_id;
     document.getElementById('txt_ndocumento').value=data.doc_nrodocumento;
@@ -124,6 +153,13 @@ $('#tabla_tramite').on('click','.mas',function(){
     document.getElementById('txt_email').value=data.doc_emailremitente;
 })
 
+/*
+    Registra una derivación o finalización de trámite:
+        - Valida datos de entrada
+        - Procesa archivos adjuntos
+        - Realiza petición AJAX al servidor
+        - Maneja respuesta y actualiza interfaz
+*/
 function Registrar_Derivacion(){
     //DATOS DEL REMITENTE
     let iddo = document.getElementById('txt_idocumento_de').value;
@@ -224,6 +260,11 @@ function Registrar_Derivacion(){
 
 }
 
+/*
+    Carga áreas en selectores:
+        - Para registro de nuevos trámites
+        - Con opción de excluir un área específica
+*/
 function Cargar_Select_Area(){
     $.ajax({
         "url":"../controller/usuario/controlador_cargar_select_area.php",
@@ -249,6 +290,9 @@ function Cargar_Select_Area(){
     })
 }
 
+/*
+    Carga tipos de documento en selector
+*/
 function Cargar_Select_Tipo(){
     $.ajax({
         "url":"../controller/tramite/controlador_cargar_select_tipo.php",
@@ -271,6 +315,13 @@ function Cargar_Select_Tipo(){
     })
 }
 
+/*
+    Registra un nuevo trámite:
+        - Valida datos del remitente y documento
+        - Procesa múltiples archivos adjuntos
+        - Realiza petición AJAX al servidor
+        - Maneja respuesta y recarga la vista
+*/
 function Registrar_Tramite() {
     // DATOS DEL REMITENTE
     let dni = document.getElementById('txt_dni').value;
@@ -391,6 +442,9 @@ function Registrar_Tramite() {
     return false;
 }
 
+/*
+    Carga las áreas disponibles en un elemento select, excluyendo el área especificada
+*/
 function Cargar_Select_Area_Destino(id){
     $.ajax({
         "url":"../controller/usuario/controlador_cargar_select_area.php",
@@ -418,6 +472,12 @@ function Cargar_Select_Area_Destino(id){
 
 // SEGUIMIENTO DE TRÁMITE
 var  tbl_seguimiento;
+
+/*
+    Configura y carga la DataTable para el seguimiento de un trámite:
+        - Muestra historial de movimientos
+        - Procesa y muestra archivos adjuntos en cada movimiento
+*/
 function Listar_Seguimiento_Tramite(id){
     tbl_seguimiento = $("#tabla_seguimiento").DataTable({
         "ordering":false,   
@@ -471,6 +531,9 @@ function Listar_Seguimiento_Tramite(id){
     });
 }
 
+/*
+    Manejador para visualizar archivos adjuntos en el seguimiento
+*/
 $('#tabla_seguimiento').off('click', '.ver').on('click', '.ver', function() {
     var archivo = $(this).data('archivo');
     var baseUrl = window.location.origin + '/tramitedocumentario/';

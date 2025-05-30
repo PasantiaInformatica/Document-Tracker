@@ -1,3 +1,15 @@
+/*
+    Proceso completo de autenticación de usuarios
+        - Valida campos obligatorios
+        - Verifica credenciales contra backend
+        - Maneja estados de usuario (activo/inactivo)
+        - Crea sesión y redirecciona
+        - Incluye:
+            - Validación frontend
+            - Doble llamada AJAX (validación + creación de sesión)
+            - Feedback visual con SweetAlert
+            - Recarga la página al finalizar
+*/
 function Iniciar_Sesion(){
     recuerdame(); 
     let usu = document.getElementById('txt_usuario').value;
@@ -73,6 +85,12 @@ function Iniciar_Sesion(){
     })
 }
 
+/*
+    Guarda credenciales en localStorage si:
+        - Checkbox "Recuérdame" está activado
+        - Ambos campos (usuario y contraseña) tienen valores
+    Sino, limpia el almacenamiento
+*/
 function recuerdame(){
     if(rmcheck.checked &&  usuarioInput.value!="" && passInput.value !=""){
         localStorage.usuario   = usuarioInput.value;
@@ -86,6 +104,13 @@ function recuerdame(){
 }
 
 var tbl_usuario;
+
+/*
+    Configura DataTable para listar usuarios:
+        - Carga datos via AJAX desde controlador PHP
+        - Personaliza columnas (estado con badges, botones de acción)
+        - Numeración automática de filas
+*/
 function Listar_Usuario(){
     tbl_usuario = $("#tabla_usuario").DataTable({
         "ordering":false,   
@@ -137,6 +162,7 @@ function Listar_Usuario(){
     });
 }
 
+/* Abre modal de edición y precarga datos del usuario seleccionado */
 $('#tabla_usuario').on('click','.editar',function(){
     var data = tbl_usuario.row($(this).parents('tr')).data();//En tamaño escritorio
     if(tbl_usuario.row(this).child.isShown()){
@@ -150,6 +176,7 @@ $('#tabla_usuario').on('click','.editar',function(){
     
 })
 
+/* Abre modal para cambiar contraseña del usuario seleccionado */
 $('#tabla_usuario').on('click','.contra',function(){
     var data = tbl_usuario.row($(this).parents('tr')).data();//En tamaño escritorio
     if(tbl_usuario.row(this).child.isShown()){
@@ -160,6 +187,7 @@ $('#tabla_usuario').on('click','.contra',function(){
    
 })
 
+/* Muestra confirmación para desactivar usuario (cambia estado a INACTIVO) */
 $('#tabla_usuario').on('click','.desactivar',function(){
     var data = tbl_usuario.row($(this).parents('tr')).data();//En tamaño escritorio
     if(tbl_usuario.row(this).child.isShown()){
@@ -183,6 +211,7 @@ $('#tabla_usuario').on('click','.desactivar',function(){
     
 })
 
+/* Muestra confirmación para activar usuario (cambia estado a ACTIVO) */
 $('#tabla_usuario').on('click','.activar',function(){
     var data = tbl_usuario.row($(this).parents('tr')).data();//En tamaño escritorio
     if(tbl_usuario.row(this).child.isShown()){
@@ -206,12 +235,27 @@ $('#tabla_usuario').on('click','.activar',function(){
     
 })
 
+/* 
+    Abre modal de registro de usuario con configuración especial:
+        - backdrop:static -> Evita que se cierre al hacer clic fuera del modal
+        - keyboard:false -> Deshabilita el cierre con tecla ESC
+    Prepara el formulario para nuevo registro
+*/
 function AbrirRegistro(){
     $("#modal_registro").modal({backdrop:'static',keyboard:false})
     $("#modal_registro").modal('show');
 }
 
-
+/* 
+    Proceso completo de registro de usuario:
+        1. Valida que todos los campos obligatorios estén llenos
+        2. Envia datos al servidor via AJAX (POST)
+        3. Maneja 3 tipos de respuestas:
+            - Éxito (1): Muestra confirmación, limpia formulario y recarga tabla
+            - Usuario duplicado: Muestra advertencia específica
+            - Error general: Muestra mensaje de fallo en registro
+        4. Recarga la tabla de usuarios después de registro exitoso
+*/
 function Registrar_Usuario(){
     let usu = document.getElementById('txt_usu').value;
     let con = document.getElementById('txt_con').value;
@@ -254,6 +298,13 @@ function Registrar_Usuario(){
     })
 }
 
+/*
+    Actualiza los datos básicos de un usuario:
+        - Valida campos obligatorios (ID, empleado, área, rol)
+        - Envía cambios al servidor via AJAX
+        - Muestra confirmación/error y recarga la tabla
+        - Cierra el modal de edición al completarse
+*/
 function Modificar_Usuario(){
     let id = document.getElementById('txt_idusuario').value;
     let ide = document.getElementById('select_empleado_editar').value;
@@ -285,6 +336,13 @@ function Modificar_Usuario(){
     })
 }
 
+/*
+    Cambia la contraseña de un usuario:
+        - Valida ID y nueva contraseña
+        - Envía datos al servidor via AJAX
+        - Muestra confirmación/error y recarga tabla
+        - Cierra el modal de contraseña al completarse
+*/
 function Modificar_Usuario_Contra(){
     let id = document.getElementById('txt_idusuario_contra').value;
     let con = document.getElementById('txt_contra_nueva').value;
@@ -311,6 +369,14 @@ function Modificar_Usuario_Contra(){
     })
 }
 
+/*
+    Cambia el estado (ACTIVO/INACTIVO) de un usuario:
+        - Recibe ID, nuevo estado y nombre de usuario
+        - Ajusta el texto de confirmación según el estado
+        - Envía cambio al servidor via AJAX
+        - Muestra confirmación con nombre de usuario
+        - Recarga tabla después de actualizar
+*/
 function Modificar_Status_Usuario(id,status,user){
     let esta = status;
     if(esta=="INACTIVO"){
@@ -336,6 +402,12 @@ function Modificar_Status_Usuario(id,status,user){
     })
 }
 
+/*
+    Carga lista de empleados para selects:
+        - Obtiene datos via AJAX (ID y nombre)
+        - Genera options para selects de registro y edición
+        - Maneja caso cuando no hay empleados disponibles
+*/
 function Cargar_Select_Empleado(){
     $.ajax({
         "url":"../controller/usuario/controlador_cargar_select_empleado.php",
@@ -361,6 +433,12 @@ function Cargar_Select_Empleado(){
     })
 }
 
+/*
+    Carga lista de áreas para selects:
+        - Obtiene datos via AJAX (ID y nombre)
+        - Genera options para selects de registro y edición
+        - Maneja caso cuando no hay áreas disponibles
+*/
 function Cargar_Select_Area(){
     $.ajax({
         "url":"../controller/usuario/controlador_cargar_select_area.php",
@@ -388,6 +466,18 @@ function Cargar_Select_Area(){
 
 ////seguimiento tramite/
 
+/*
+    Consulta el seguimiento de un trámite:
+        1. Valida que número de trámite y DNI no estén vacíos
+        2. Realiza primera consulta AJAX para obtener datos básicos del trámite:
+            - Muestra sección de resultados si hay datos
+            - Actualiza título con número de trámite y nombre de solicitante
+        3. Realiza segunda consulta AJAX para obtener el detalle completo:
+            - Construye línea de tiempo interactiva con cada movimiento
+            - Muestra: área origen/destino, estado, fecha y observaciones
+        4. Maneja caso cuando no se encuentran resultados
+        5. Oculta sección de resultados si la consulta no devuelve datos
+*/
 function Traer_Datos_Seguimiento(){
     let numero = document.getElementById('txt_numero').value;
     let dni    = document.getElementById('txt_dni').value;
